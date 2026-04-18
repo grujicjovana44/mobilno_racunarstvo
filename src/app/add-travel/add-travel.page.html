@@ -1,0 +1,78 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Dodaj putovanje</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-item>
+    <ion-label position="stacked">Izaberi državu</ion-label>
+    <ion-select placeholder="Država" [(ngModel)]="novoPutovanje.drzava">
+      <ion-select-option value="Srbija">Srbija</ion-select-option>
+      <ion-select-option value="Grčka">Grčka</ion-select-option>
+      <ion-select-option value="Italija">Italija</ion-select-option>
+      <ion-select-option value="Španija">Španija</ion-select-option>
+      <ion-select-option value="Francuska">Francuska</ion-select-option>
+      <ion-select-option value="Nemačka">Nemačka</ion-select-option>
+      <ion-select-option value="Holandija">Holandija</ion-select-option>
+      <ion-select-option value="Crna Gora">Crna Gora</ion-select-option>
+      <ion-select-option value="Finska">Finska</ion-select-option>
+      <ion-select-option value="Austrija">Austrija</ion-select-option>
+      <ion-select-option value="Slovenija">Slovenija</ion-select-option>
+      <ion-select-option value="Poljska">Poljska</ion-select-option>
+      <ion-select-option value="Švedska">Švedska</ion-select-option>
+      <ion-select-option value="Turska">Turska</ion-select-option>
+      <ion-select-option value="Norveška">Norveška</ion-select-option>
+      <ion-select-option value="Hrvatska">Hrvatska</ion-select-option>
+    </ion-select>
+  </ion-item>
+
+  <div *ngIf="novoPutovanje.drzava">
+    <ion-item>
+      <ion-label position="stacked">Grad</ion-label>
+      <ion-input type="text" [(ngModel)]="novoPutovanje.grad" placeholder="Unesite grad"></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">Početak putovanja</ion-label>
+      <ion-input type="text" [(ngModel)]="novoPutovanje.datumOd" placeholder="npr. 01.01.2026."></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">Kraj putovanja</ion-label>
+      <ion-input type="text" [(ngModel)]="novoPutovanje.datumDo" placeholder="npr. 10.01.2026."></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">Vrsta prevoza</ion-label>
+      <ion-select placeholder="Izaberi vrstu prevoza" [(ngModel)]="novoPutovanje.vrstaPrevoza">
+        <ion-select-option value="Avion">Avion</ion-select-option>
+        <ion-select-option value="Autobus">Autobus</ion-select-option>
+        <ion-select-option value="Automobil">Automobil</ion-select-option>
+        <ion-select-option value="Voz">Voz</ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">Cena prevoza (€)</ion-label>
+      <ion-input type="number" [(ngModel)]="novoPutovanje.cenaPrevoza" placeholder="0.00"></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">Vrsta smeštaja</ion-label>
+      <ion-input type="text" [(ngModel)]="novoPutovanje.vrstaSmestaja" placeholder="Hotel, apartman..."></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">Cena smeštaja (€)</ion-label>
+      <ion-input type="number" [(ngModel)]="novoPutovanje.cenaSmestaja" placeholder="0.00"></ion-input>
+    </ion-item>
+
+    <ion-button expand="block" class="ion-margin-top" (click)="sacuvajPutovanje()">
+      Sačuvaj putovanje
+    </ion-button>
+  </div>
+</ion-content>

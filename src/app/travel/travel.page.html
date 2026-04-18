@@ -1,0 +1,31 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Moja putovanja</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-list>
+    <ion-item *ngFor="let p of putovanja">
+      <ion-label>
+        <h2 style="font-weight: bold;">{{ p.grad }}, {{ p.drzava }}</h2>
+        <p>📅 {{ p.datumOd | date:'dd.MM.yyyy' }} - {{ p.datumDo | date:'dd.MM.yyyy' }}</p>
+        <p>🚗 {{ p.vrstaPrevoza }} ({{ p.cenaPrevoza }}€)</p>
+        <p>🏨 {{ p.vrstaSmestaja }} ({{ p.cenaSmestaja }}€)</p>
+      </ion-label>
+    </ion-item>
+  </ion-list>
+
+  <div *ngIf="putovanja.length === 0" class="ion-text-center ion-padding">
+    <p>Nema unetih putovanja. Klikni na + da dodaš prvo!</p>
+  </div>
+
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+    <ion-fab-button (click)="idiNaDodavanje()">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+</ion-content>

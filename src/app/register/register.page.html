@@ -1,0 +1,34 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/login"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Novi nalog</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-item>
+    <ion-label position="stacked">Ime i prezime</ion-label>
+    <ion-input type="text" placeholder="Unesite svoje ime i prezime"></ion-input>
+  </ion-item>
+
+  <ion-item class="ion-margin-top">
+    <ion-label position="stacked">Email</ion-label>
+    <ion-input type="email" placeholder="vas@email.com"></ion-input>
+  </ion-item>
+
+  <ion-item class="ion-margin-top">
+    <ion-label position="stacked">Lozinka</ion-label>
+    <ion-input type="password" placeholder="Minimum 6 karaktera"></ion-input>
+  </ion-item>
+
+  <ion-item class="ion-margin-top">
+    <ion-label position="stacked">Potvrdi lozinku</ion-label>
+    <ion-input type="password" placeholder="********"></ion-input>
+  </ion-item>
+
+  <ion-button expand="block" class="ion-margin-top" shape="round" color="primary">
+    Kreiraj nalog
+  </ion-button>
+</ion-content>
