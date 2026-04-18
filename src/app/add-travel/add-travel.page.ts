@@ -1,8 +1,10 @@
-import { Component, OnInit, OnDestroy, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { Component, OnInit, inject, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
+import { TravelService } from '../services/travel.service';
+import { Travel } from '../models/travel.model';
 
 @Component({
   selector: 'app-add-travel',
@@ -12,7 +14,10 @@ import { Router } from '@angular/router';
   imports: [IonicModule, CommonModule, FormsModule],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
-export class AddTravelPage implements OnInit, OnDestroy {
+export class AddTravelPage implements OnInit {
+  private travelService = inject(TravelService);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   novoPutovanje = {
     drzava: '',
@@ -20,39 +25,66 @@ export class AddTravelPage implements OnInit, OnDestroy {
     datumOd: '',
     datumDo: '',
     vrstaPrevoza: '',
-    cenaPrevoza: null,
+    cenaPrevoza: 0,
     vrstaSmestaja: '',
-    cenaSmestaja: null
+    cenaSmestaja: 0
   };
+  
+  id: string | null = null;
 
-  constructor(private router: Router) { }
+  constructor() { }
 
   ngOnInit() {
-    console.log('ngOnInit');
-  }
+    this.id = this.route.snapshot.params['id'];
 
-  ionViewWillEnter() {
-    console.log('ionViewWillEnter');
-  }
-
-  ionViewDidEnter() {
-    console.log('ionViewDidEnter');
-  }
-
-  ionViewWillLeave() {
-    console.log('ionViewWillLeave');
-  }
-
-  ionViewDidLeave() {
-    console.log('ionViewDidLeave');
-  }
-
-  ngOnDestroy() {
-    console.log('ngOnDestroy');
-  }
+    this.route.queryParams.subscribe(params => {
+      if (params['drzava']) {
+        this.novoPutovanje = {
+          drzava: params['drzava'],
+          grad: params['grad'],
+          datumOd: params['datumOd'],
+          datumDo: params['datumDo'],
+          vrstaPrevoza: params['vrstaPrevoza'],
+          cenaPrevoza: +params['cenaPrevoza'],
+          vrstaSmestaja: params['vrstaSmestaja'],
+          cenaSmestaja: +params['cenaSmestaja']
+        };
+      }
+    });
+  } 
 
   sacuvajPutovanje() {
-    console.log('Snimljeno:', this.novoPutovanje);
+    if (this.router.url.includes('edit') && this.id) {
+      // izmena
+      const p = new Travel(
+        this.id,
+        this.novoPutovanje.drzava,
+        this.novoPutovanje.grad,
+        this.novoPutovanje.datumOd,
+        this.novoPutovanje.datumDo,
+        this.novoPutovanje.vrstaPrevoza,
+        this.novoPutovanje.cenaPrevoza,
+        this.novoPutovanje.vrstaSmestaja,
+        this.novoPutovanje.cenaSmestaja
+      );
+      this.travelService.editPutovanje(p);
+    } else {
+      // dodavanje
+      const noviId = Math.random().toString(36).substring(2, 9);
+      const p = new Travel(
+        noviId,
+        this.novoPutovanje.drzava,
+        this.novoPutovanje.grad,
+        this.novoPutovanje.datumOd,
+        this.novoPutovanje.datumDo,
+        this.novoPutovanje.vrstaPrevoza,
+        this.novoPutovanje.cenaPrevoza,
+        this.novoPutovanje.vrstaSmestaja,
+        this.novoPutovanje.cenaSmestaja
+      );
+      this.travelService.addPutovanje(p);
+    }
+
     this.router.navigate(['/travel']);
   }
 }

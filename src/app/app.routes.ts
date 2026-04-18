@@ -27,4 +27,8 @@ export const routes: Routes = [
     path: 'add-travel',
     loadComponent: () => import('./add-travel/add-travel.page').then( m => m.AddTravelPage)
   },
+  {
+    path: 'travel/:id/edit',
+    loadComponent: () => import('./add-travel/add-travel.page').then( m => m.AddTravelPage)
+  },
 ];

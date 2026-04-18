@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { Router } from '@angular/router';
+import { inject } from '@angular/core';
+import { TravelService } from '../services/travel.service';
 
 @Component({
   selector: 'app-travel',
@@ -11,11 +13,13 @@ import { Router } from '@angular/router';
   standalone: true,
   imports: [IonicModule, CommonModule, FormsModule]
 })
+
 export class TravelPage implements OnInit,OnDestroy {
+  public travelService = inject(TravelService);
+  public router = inject(Router);
 
-  putovanja: any[] = [];
 
-  constructor(private router: Router) { }
+  constructor() {}
 
   ngOnInit() {
     console.log('ngOnInit');
@@ -45,4 +49,22 @@ export class TravelPage implements OnInit,OnDestroy {
     this.router.navigate(['/add-travel']);
   }
 
+  onDelete(id: string) {
+    this.travelService.deletePutovanje(id);
+  }
+
+  onEdit(p: any) {
+  this.router.navigate(['travel', p.id, 'edit'], {
+    queryParams: { 
+      drzava: p.drzava, 
+      grad: p.grad, 
+      datumOd: p.datumOd, 
+      datumDo: p.datumDo,
+      vrstaPrevoza: p.vrstaPrevoza,
+      cenaPrevoza: p.cenaPrevoza,
+      vrstaSmestaja: p.vrstaSmestaja,
+      cenaSmestaja: p.cenaSmestaja
+    },
+  });
+  }
 }
