@@ -1,0 +1,7 @@
+{
+  "name": "planer-putovanja",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}
