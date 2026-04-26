@@ -8,8 +8,8 @@
 
     <ion-content>
       <ion-list lines="none">
-        
-        <ion-item>
+
+        <ion-item routerLink="/profile" routerDirection="root">
           <ion-icon name="person-circle-outline" slot="start"></ion-icon>
           <ion-label>My Profile</ion-label>
         </ion-item>
@@ -19,9 +19,19 @@
           <ion-label>My Travel Plans</ion-label>
         </ion-item>
 
-        <ion-item>
+        <ion-item routerLink="/statistics" routerDirection="root">
           <ion-icon name="bar-chart-outline" slot="start"></ion-icon>
           <ion-label>Travel Statistics</ion-label>
+        </ion-item>
+
+        <ion-item routerLink="/requests" routerDirection="root">
+          <ion-icon name="requests-outline" slot="start"></ion-icon>
+          <ion-label>Requests</ion-label>
+        </ion-item>
+
+        <ion-item routerLink="/friends" routerDirection="root">
+          <ion-icon name="people-outline" slot="start"></ion-icon>
+          <ion-label>Friends</ion-label>
         </ion-item>
 
         <ion-item routerLink="/login" routerDirection="root" class="ion-margin-top">
@@ -34,4 +44,29 @@
   </ion-menu>
 
   <ion-router-outlet id="main"></ion-router-outlet>
+
+  <ion-tabs>
+    <!-- Tab bar -->
+    <ion-tab-bar slot="bottom">
+      <ion-tab-button tab="profile" routerLink="/profile">
+        <ion-icon name="person-circle" style="color: #d7abab;"></ion-icon>
+        <ion-label>Profile</ion-label>
+      </ion-tab-button>
+
+      <ion-tab-button tab="travel plans" routerLink="/travel">
+        <ion-icon name="information-circle" style="color: #d7abab;"></ion-icon>
+        <ion-label>Travel Plans</ion-label>
+      </ion-tab-button>
+
+      <ion-tab-button tab="statistics"  routerLink="/statistics">
+        <ion-icon name="bar-chart" style="color: #d7abab;"></ion-icon>
+        <ion-label>Statistics</ion-label>
+      </ion-tab-button>
+
+      <ion-tab-button tab="frineds"  routerLink="/friends">
+        <ion-icon name="people" style="color: #d7abab;"></ion-icon>
+        <ion-label>Friends</ion-label>
+      </ion-tab-button>
+    </ion-tab-bar>
+  </ion-tabs>
 </ion-app>

@@ -5,6 +5,7 @@ import { IonicModule } from '@ionic/angular';
 import { Router } from '@angular/router';
 import { inject } from '@angular/core';
 import { TravelService } from '../services/travel.service';
+import { Travel } from '../models/travel.model';
 
 @Component({
   selector: 'app-travel',
@@ -67,4 +68,8 @@ export class TravelPage implements OnInit,OnDestroy {
     },
   });
   }
+
+  togglePoseceno(p: Travel) {
+  p.poseceno = !p.poseceno;
+}
 }

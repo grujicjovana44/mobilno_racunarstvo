@@ -31,4 +31,24 @@ export const routes: Routes = [
     path: 'travel/:id/edit',
     loadComponent: () => import('./add-travel/add-travel.page').then( m => m.AddTravelPage)
   },
+  {
+    path: 'statistics',
+    loadComponent: () => import('./statistics/statistics.page').then( m => m.StatisticsPage)
+  },
+  {
+    path: 'profile',
+    loadComponent: () => import('./profile/profile.page').then( m => m.ProfilePage)
+  },
+  {
+    path: 'friends',
+    loadComponent: () => import('./friends/friends.page').then( m => m.FriendsPage)
+  },
+  {
+    path: 'friend-details',
+    loadComponent: () => import('./friend-details/friend-details.page').then( m => m.FriendDetailsPage)
+  },
+  {
+    path: 'requests',
+    loadComponent: () => import('./requests/requests.page').then( m => m.RequestsPage)
+  },
 ];

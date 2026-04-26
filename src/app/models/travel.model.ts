@@ -8,6 +8,7 @@ export class Travel {
     public vrstaPrevoza: string,
     public cenaPrevoza: number,
     public vrstaSmestaja: string,
-    public cenaSmestaja: number
+    public cenaSmestaja: number,
+    public poseceno: boolean = false
   ) {}
 }

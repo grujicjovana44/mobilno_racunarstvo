@@ -1,0 +1,60 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title style="font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+      Friends
+    </ion-title>
+    
+    <ion-buttons slot="end">
+      <ion-button (click)="toggleSearch()" style="--color: #ff4d4d; font-weight: bold; font-size: 0.8rem;">
+        ADD NEW FRIEND
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <h2>Dobrodošla, Jovana!</h2>
+
+  <div *ngIf="showSearch">
+    <ion-searchbar 
+      placeholder="Dodaj prijatelja sa emailom.." 
+      show-cancel-button="always" 
+      (ionCancel)="toggleSearch()"
+      (ionInput)="searchFriends($event)">
+    </ion-searchbar>
+    
+    <ion-list *ngIf="searchResult">
+      <ion-item>
+        <ion-label>
+          <h3>{{ searchResult.name }}</h3>
+          <p>{{ searchResult.email }}</p>
+        </ion-label>
+        <ion-button slot="end" fill="outline" (click)="sendRequest(searchResult.id)">
+          Pošalji zahtev
+        </ion-button>
+      </ion-item>
+    </ion-list>
+  </div>
+
+  <hr />
+
+  <ion-list>
+    <ion-list-header>
+      <ion-label>Moji prijatelji</ion-label>
+    </ion-list-header>
+
+    <ion-item *ngFor="let friend of friendService.mojiPrijatelji" button (click)="viewFriendPlans(friend.id)">
+      <ion-avatar slot="start">
+        <ion-icon name="person-circle" style="font-size: 40px;"></ion-icon>
+      </ion-avatar>
+      <ion-label>
+        <h2>{{ friend.name }}</h2>
+        <p>Klikni da vidiš putovanja</p>
+      </ion-label>
+      <ion-icon name="chevron-forward-outline" slot="end"></ion-icon>
+    </ion-item>
+  </ion-list>
+</ion-content>

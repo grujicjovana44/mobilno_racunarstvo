@@ -1,0 +1,35 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/friends"></ion-back-button>
+    </ion-buttons>
+    <ion-title style="font-weight: 600;">REQUESTS</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+
+<ion-content class="ion-padding">
+  <h2 style="font-weight: bold;">Novi zahtevi</h2>
+  <p *ngIf="zahtevi.length === 0">Trenutno nemaš novih zahteva za prijateljstvo.</p>
+
+  <ion-list lines="full">
+    <ion-item *ngFor="let z of zahtevi">
+      <ion-avatar slot="start">
+        <ion-icon name="person-circle" style="font-size: 40px; color: #d7abab;"></ion-icon>
+      </ion-avatar>
+      <ion-label>
+        <h3 style="font-weight: bold;">{{ z.name }}</h3>
+        <p>{{ z.email }}</p>
+      </ion-label>
+
+      <ion-buttons slot="end">
+        <ion-button color="success" (click)="prihvatiZahtev(z)">
+          <ion-icon slot="icon-only" name="checkmark-circle"></ion-icon>
+        </ion-button>
+        <ion-button color="danger" (click)="odbijZahtev(z)">
+          <ion-icon slot="icon-only" name="close-circle"></ion-icon>
+        </ion-button>
+      </ion-buttons>
+    </ion-item>
+  </ion-list>
+</ion-content>

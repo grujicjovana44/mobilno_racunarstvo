@@ -3,7 +3,9 @@
     <ion-buttons slot="start">
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
-    <ion-title>Moja putovanja</ion-title>
+    <ion-title style="font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+      MY TRAVEL PLANS
+    </ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -17,9 +19,18 @@
           <p>🚗 {{ p.vrstaPrevoza }} ({{ p.cenaPrevoza }}€)</p>
           <p>🏨 {{ p.vrstaSmestaja }} ({{ p.cenaSmestaja }}€)</p>
         </ion-label>
+
+        <div slot="end" style="display: flex; flex-direction: column; align-items: center;">
         <ion-note slot="end" color="danger" style="font-weight: bold; cursor: pointer;">
           EDIT
         </ion-note>
+        <ion-checkbox 
+        color="success" 
+        [checked]="p.poseceno" 
+        (ionChange)="togglePoseceno(p)"
+        (click)="$event.stopPropagation()">
+        </ion-checkbox>
+        </div>
       </ion-item>
 
       <ion-item-options side="end">
