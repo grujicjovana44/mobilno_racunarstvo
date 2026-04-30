@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { authGuard } from './auth/auth-guard';
 
 export const routes: Routes = [
  
@@ -9,11 +10,13 @@ export const routes: Routes = [
   },
   {
     path: 'travel',
-    loadComponent: () => import('./travel/travel.page').then( m => m.TravelPage)
+    loadComponent: () => import('./travel/travel.page').then( m => m.TravelPage),
+    canActivate: [authGuard]
   },
   {
     path: 'travel-details',
-    loadComponent: () => import('./travel-details/travel-details.page').then( m => m.TravelDetailsPage)
+    loadComponent: () => import('./travel-details/travel-details.page').then( m => m.TravelDetailsPage),
+    canActivate: [authGuard]
   },
   {
     path: 'login',
@@ -25,30 +28,37 @@ export const routes: Routes = [
   },
   {
     path: 'add-travel',
-    loadComponent: () => import('./add-travel/add-travel.page').then( m => m.AddTravelPage)
+    loadComponent: () => import('./add-travel/add-travel.page').then( m => m.AddTravelPage),
+    canActivate: [authGuard]
   },
   {
     path: 'travel/:id/edit',
-    loadComponent: () => import('./add-travel/add-travel.page').then( m => m.AddTravelPage)
+    loadComponent: () => import('./add-travel/add-travel.page').then( m => m.AddTravelPage),
+    canActivate: [authGuard]
   },
   {
     path: 'statistics',
-    loadComponent: () => import('./statistics/statistics.page').then( m => m.StatisticsPage)
+    loadComponent: () => import('./statistics/statistics.page').then( m => m.StatisticsPage),
+    canActivate: [authGuard]
   },
   {
     path: 'profile',
-    loadComponent: () => import('./profile/profile.page').then( m => m.ProfilePage)
+    loadComponent: () => import('./profile/profile.page').then( m => m.ProfilePage),
+    canActivate: [authGuard]
   },
   {
     path: 'friends',
-    loadComponent: () => import('./friends/friends.page').then( m => m.FriendsPage)
+    loadComponent: () => import('./friends/friends.page').then( m => m.FriendsPage),
+    canActivate: [authGuard]
   },
   {
     path: 'friend-details',
-    loadComponent: () => import('./friend-details/friend-details.page').then( m => m.FriendDetailsPage)
+    loadComponent: () => import('./friend-details/friend-details.page').then( m => m.FriendDetailsPage),
+    canActivate: [authGuard]
   },
   {
     path: 'requests',
-    loadComponent: () => import('./requests/requests.page').then( m => m.RequestsPage)
+    loadComponent: () => import('./requests/requests.page').then( m => m.RequestsPage),
+    canActivate: [authGuard]
   },
 ];

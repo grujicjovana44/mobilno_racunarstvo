@@ -2,13 +2,12 @@
   <ion-menu contentId="main">
     <ion-header class="ion-no-border">
       <ion-toolbar color="primary">
-        <ion-title>Travel Planner</ion-title>
+        <ion-title style="font-weight: 800;">TRAVEL PLANNER</ion-title>
       </ion-toolbar>
     </ion-header>
 
     <ion-content>
       <ion-list lines="none">
-
         <ion-item routerLink="/profile" routerDirection="root">
           <ion-icon name="person-circle-outline" slot="start"></ion-icon>
           <ion-label>My Profile</ion-label>
@@ -25,7 +24,7 @@
         </ion-item>
 
         <ion-item routerLink="/requests" routerDirection="root">
-          <ion-icon name="requests-outline" slot="start"></ion-icon>
+          <ion-icon name="mail-outline" slot="start"></ion-icon>
           <ion-label>Requests</ion-label>
         </ion-item>
 
@@ -38,35 +37,31 @@
           <ion-icon name="log-out-outline" slot="start" color="danger"></ion-icon>
           <ion-label color="danger">Log out</ion-label>
         </ion-item>
-
       </ion-list>
     </ion-content>
   </ion-menu>
 
   <ion-router-outlet id="main"></ion-router-outlet>
 
-  <ion-tabs>
-    <!-- Tab bar -->
-    <ion-tab-bar slot="bottom">
-      <ion-tab-button tab="profile" routerLink="/profile">
-        <ion-icon name="person-circle" style="color: #d7abab;"></ion-icon>
-        <ion-label>Profile</ion-label>
-      </ion-tab-button>
+  <ion-tab-bar slot="bottom" *ngIf="showTabs" style="position: fixed; bottom: 0; width: 100%;">
+    <ion-tab-button tab="profile" routerLink="/profile">
+      <ion-icon name="person-circle" style="color: #d7abab;"></ion-icon>
+      <ion-label>Profile</ion-label>
+    </ion-tab-button>
 
-      <ion-tab-button tab="travel plans" routerLink="/travel">
-        <ion-icon name="information-circle" style="color: #d7abab;"></ion-icon>
-        <ion-label>Travel Plans</ion-label>
-      </ion-tab-button>
+    <ion-tab-button tab="travel" routerLink="/travel">
+      <ion-icon name="information-circle" style="color: #d7abab;"></ion-icon>
+      <ion-label>Travel Plans</ion-label>
+    </ion-tab-button>
 
-      <ion-tab-button tab="statistics"  routerLink="/statistics">
-        <ion-icon name="bar-chart" style="color: #d7abab;"></ion-icon>
-        <ion-label>Statistics</ion-label>
-      </ion-tab-button>
+    <ion-tab-button tab="statistics" routerLink="/statistics">
+      <ion-icon name="bar-chart" style="color: #d7abab;"></ion-icon>
+      <ion-label>Statistics</ion-label>
+    </ion-tab-button>
 
-      <ion-tab-button tab="frineds"  routerLink="/friends">
-        <ion-icon name="people" style="color: #d7abab;"></ion-icon>
-        <ion-label>Friends</ion-label>
-      </ion-tab-button>
-    </ion-tab-bar>
-  </ion-tabs>
+    <ion-tab-button tab="friends" routerLink="/friends">
+      <ion-icon name="people" style="color: #d7abab;"></ion-icon>
+      <ion-label>Friends</ion-label>
+    </ion-tab-button>
+  </ion-tab-bar>
 </ion-app>
