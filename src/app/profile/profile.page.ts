@@ -1,13 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { 
-  IonContent, IonHeader, IonTitle, IonToolbar, IonButtons, 
-  IonMenuButton, IonAvatar, IonIcon, IonList, IonItem, 
-  IonLabel, IonButton 
+import {
+  IonContent, IonHeader, IonTitle, IonToolbar,
+  IonAvatar, IonIcon, IonList, IonItem,
+  IonLabel, IonButton
 } from '@ionic/angular/standalone';
 
-import { Router } from '@angular/router';
+import { AuthService } from '../auth/auth';
 
 @Component({
   selector: 'app-profile',
@@ -15,21 +15,17 @@ import { Router } from '@angular/router';
   styleUrls: ['./profile.page.scss'],
   standalone: true,
   imports: [
-    IonContent, IonHeader, IonTitle, IonToolbar, IonButtons, 
-    IonMenuButton, IonAvatar, IonIcon, IonList, IonItem, 
+    IonContent, IonHeader, IonTitle, IonToolbar,
+    IonAvatar, IonIcon, IonList, IonItem,
     IonLabel, IonButton, CommonModule
   ]
 })
-
 export class ProfilePage implements OnInit {
+  constructor(public authService: AuthService) {}
 
-  constructor(private router: Router) { }
+  ngOnInit() {}
 
-  ngOnInit() {
+  async logout() {
+    await this.authService.logOut();
   }
-
-  logout() {
-    this.router.navigate(['/login']);
-  }
-
 }

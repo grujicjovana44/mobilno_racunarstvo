@@ -1,13 +1,14 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { 
-  IonContent, IonHeader, IonTitle, IonToolbar, 
-  IonList, IonItem, IonAvatar, IonIcon, 
-  IonLabel, IonButtons, IonButton, IonBackButton 
-} from '@ionic/angular/standalone'
+import {
+  IonContent, IonHeader, IonTitle, IonToolbar,
+  IonList, IonItem, IonAvatar, IonIcon,
+  IonLabel, IonButtons, IonButton, IonBackButton
+} from '@ionic/angular/standalone';
 
-import { FriendService } from '../services/friend';
+import { FirebaseService } from '../services/firebase.service';
+import { AuthService } from '../auth/auth';
 
 @Component({
   selector: 'app-requests',
@@ -15,37 +16,41 @@ import { FriendService } from '../services/friend';
   styleUrls: ['./requests.page.scss'],
   standalone: true,
   imports: [
-    IonContent, IonHeader, IonTitle, IonToolbar, 
-    IonList, IonItem, IonAvatar, IonIcon, 
+    IonContent, IonHeader, IonTitle, IonToolbar,
+    IonList, IonItem, IonAvatar, IonIcon,
     IonLabel, IonButtons, IonButton, IonBackButton,
     CommonModule, FormsModule
   ]
-  })
-export class RequestsPage implements OnInit {
+})
+export class RequestsPage implements OnInit, OnDestroy {
+  private firebaseService = inject(FirebaseService);
+  private authService = inject(AuthService);
 
- constructor(public friendService: FriendService) { }
+  zahtevi: any[] = [];
+
+  private unsub: (() => void) | null = null;
 
   ngOnInit() {
+    const uid = this.authService.currentUid;
+    if (!uid) return;
+    this.unsub = this.firebaseService.subscribeToFriendRequests(uid, (requests) => {
+      this.zahtevi = requests;
+    });
   }
 
-  //PROBA PODACI
-  zahtevi = [
-    { id: '101', name: 'Milan Milenković', email: 'milan@gmail.com' },
-    { id: '102', name: 'Sara Sarić', email: 'sara@gmail.com' }
-  ];
-  prijatelji: any[]=[];
-
-  prihvatiZahtev(osoba: any) {
-    //prebaci u prijatelje pa obrise
-    this.friendService.dodajPrijatelja(osoba);
-    this.zahtevi = this.zahtevi.filter(z => z.id !== osoba.id);
-    console.log('Prihvaćen:', osoba.name);
-  }
-  odbijZahtev(osoba: any) {
-    //samo obrise i tjt
-    this.zahtevi = this.zahtevi.filter(z => z.id !== osoba.id);
-    console.log('Odbijen:', osoba.name);
+  async prihvatiZahtev(osoba: any) {
+    const myUid = this.authService.currentUid;
+    if (!myUid) return;
+    await this.firebaseService.acceptFriendRequest(myUid, osoba.id);
   }
 
+  async odbijZahtev(osoba: any) {
+    const myUid = this.authService.currentUid;
+    if (!myUid) return;
+    await this.firebaseService.rejectFriendRequest(myUid, osoba.id);
+  }
 
+  ngOnDestroy() {
+    this.unsub?.();
+  }
 }

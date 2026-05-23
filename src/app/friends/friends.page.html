@@ -6,7 +6,6 @@
     <ion-title style="font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
       Friends
     </ion-title>
-    
     <ion-buttons slot="end">
       <ion-button (click)="toggleSearch()" style="--color: #ff4d4d; font-weight: bold; font-size: 0.8rem;">
         ADD NEW FRIEND
@@ -16,17 +15,17 @@
 </ion-header>
 
 <ion-content class="ion-padding">
-  <h2>Dobrodošla, Jovana!</h2>
+  <h2>Dobrodošla, {{ currentUserName }}!</h2>
 
   <div *ngIf="showSearch">
-    <ion-searchbar 
-      placeholder="Dodaj prijatelja sa emailom.." 
-      show-cancel-button="always" 
+    <ion-searchbar
+      placeholder="Pretraži po email adresi..."
+      show-cancel-button="always"
       (ionCancel)="toggleSearch()"
       (ionInput)="searchFriends($event)">
     </ion-searchbar>
-    
-    <ion-list *ngIf="searchResult">
+
+    <ion-list *ngIf="searchResult && !requestSent">
       <ion-item>
         <ion-label>
           <h3>{{ searchResult.name }}</h3>
@@ -37,22 +36,30 @@
         </ion-button>
       </ion-item>
     </ion-list>
+
+    <div *ngIf="requestSent" class="ion-text-center ion-padding">
+      <p style="color: green;">✓ Zahtev za prijateljstvo je poslat!</p>
+    </div>
   </div>
 
   <hr />
 
   <ion-list>
     <ion-list-header>
-      <ion-label>Moji prijatelji</ion-label>
+      <ion-label>Moji prijatelji ({{ mojiPrijatelji.length }})</ion-label>
     </ion-list-header>
 
-    <ion-item *ngFor="let friend of friendService.mojiPrijatelji" button (click)="viewFriendPlans(friend.id)">
+    <div *ngIf="mojiPrijatelji.length === 0" class="ion-text-center ion-padding">
+      <p style="color: #888;">Nemaš prijatelja. Dodaj ih gore!</p>
+    </div>
+
+    <ion-item *ngFor="let friend of mojiPrijatelji" button (click)="viewFriendDetails(friend)">
       <ion-avatar slot="start">
         <ion-icon name="person-circle" style="font-size: 40px;"></ion-icon>
       </ion-avatar>
       <ion-label>
         <h2>{{ friend.name }}</h2>
-        <p>Klikni da vidiš putovanja</p>
+        <p>{{ friend.email }}</p>
       </ion-label>
       <ion-icon name="chevron-forward-outline" slot="end"></ion-icon>
     </ion-item>

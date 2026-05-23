@@ -1,11 +1,11 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { Router } from '@angular/router';
-import { inject } from '@angular/core';
-import { TravelService } from '../services/travel.service';
-import { Travel } from '../models/travel.model';
+import { FirebaseService } from '../services/firebase.service';
+import { AuthService } from '../auth/auth';
+import { TravelDoc } from '../models/travel.model';
 
 @Component({
   selector: 'app-travel',
@@ -14,62 +14,74 @@ import { Travel } from '../models/travel.model';
   standalone: true,
   imports: [IonicModule, CommonModule, FormsModule]
 })
-
-export class TravelPage implements OnInit,OnDestroy {
-  public travelService = inject(TravelService);
+export class TravelPage implements OnInit, OnDestroy {
+  private firebaseService = inject(FirebaseService);
+  private authService = inject(AuthService);
   public router = inject(Router);
 
+  mojaputovanja: TravelDoc[] = [];
+  prijateljevaPutovanja: TravelDoc[] = [];
+
+  private unsub1: (() => void) | null = null;
+  private unsub2: (() => void) | null = null;
 
   constructor() {}
 
-  ngOnInit() {
-    console.log('ngOnInit');
-  }
+  ngOnInit() {}
 
   ionViewWillEnter() {
-    console.log('ionViewWillEnter');
-  }
+    const uid = this.authService.currentUid;
+    if (!uid) return;
 
-  ionViewDidEnter() {
-    console.log('ionViewDidEnter');
+    this.unsub1 = this.firebaseService.subscribeToMyTravels(uid, (travels) => {
+      this.mojaputovanja = travels as TravelDoc[];
+    });
+
+    this.unsub2 = this.firebaseService.subscribeToSharedTravels(uid, (travels) => {
+      this.prijateljevaPutovanja = travels as TravelDoc[];
+    });
   }
 
   ionViewWillLeave() {
-    console.log('ionViewWillLeave');
-  }
-
-  ionViewDidLeave() {
-    console.log('ionViewDidLeave');
+    this.unsub1?.();
+    this.unsub2?.();
+    this.unsub1 = null;
+    this.unsub2 = null;
   }
 
   ngOnDestroy() {
-    console.log(' ngOnDestroy');
+    this.unsub1?.();
+    this.unsub2?.();
   }
 
   idiNaDodavanje() {
     this.router.navigate(['/add-travel']);
   }
 
-  onDelete(id: string) {
-    this.travelService.deletePutovanje(id);
+  async onDelete(id: string) {
+    await this.firebaseService.deleteTravel(id);
   }
 
-  onEdit(p: any) {
-  this.router.navigate(['travel', p.id, 'edit'], {
-    queryParams: { 
-      drzava: p.drzava, 
-      grad: p.grad, 
-      datumOd: p.datumOd, 
-      datumDo: p.datumDo,
-      vrstaPrevoza: p.vrstaPrevoza,
-      cenaPrevoza: p.cenaPrevoza,
-      vrstaSmestaja: p.vrstaSmestaja,
-      cenaSmestaja: p.cenaSmestaja
-    },
-  });
+  onEdit(p: TravelDoc) {
+    this.router.navigate(['travel', p.id, 'edit'], {
+      queryParams: {
+        drzava: p.drzava,
+        grad: p.grad,
+        datumOd: p.datumOd,
+        datumDo: p.datumDo,
+        vrstaPrevoza: p.vrstaPrevoza,
+        cenaPrevoza: p.cenaPrevoza,
+        vrstaSmestaja: p.vrstaSmestaja,
+        cenaSmestaja: p.cenaSmestaja
+      }
+    });
   }
 
-  togglePoseceno(p: Travel) {
-  p.poseceno = !p.poseceno;
-}
+  async togglePoseceno(p: TravelDoc) {
+    await this.firebaseService.updateTravel(p.id, { poseceno: !p.poseceno });
+  }
+
+  idiNaUcesnike(travelId: string) {
+    this.router.navigate(['/travel-participants', travelId]);
+  }
 }

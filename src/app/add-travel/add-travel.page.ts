@@ -3,8 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { Router, ActivatedRoute } from '@angular/router';
-import { TravelService } from '../services/travel.service';
-import { Travel } from '../models/travel.model';
+import { FirebaseService } from '../services/firebase.service';
+import { AuthService } from '../auth/auth';
 
 @Component({
   selector: 'app-add-travel',
@@ -15,7 +15,8 @@ import { Travel } from '../models/travel.model';
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
 export class AddTravelPage implements OnInit {
-  private travelService = inject(TravelService);
+  private firebaseService = inject(FirebaseService);
+  private authService = inject(AuthService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
 
@@ -29,10 +30,8 @@ export class AddTravelPage implements OnInit {
     vrstaSmestaja: '',
     cenaSmestaja: 0
   };
-  
-  id: string | null = null;
 
-  constructor() { }
+  id: string | null = null;
 
   ngOnInit() {
     this.id = this.route.snapshot.params['id'];
@@ -51,38 +50,23 @@ export class AddTravelPage implements OnInit {
         };
       }
     });
-  } 
+  }
 
-  sacuvajPutovanje() {
+  async sacuvajPutovanje() {
+    const uid = this.authService.currentUid;
+    const userName = this.authService.currentUserName;
+    if (!uid) return;
+
     if (this.router.url.includes('edit') && this.id) {
-      // izmena
-      const p = new Travel(
-        this.id,
-        this.novoPutovanje.drzava,
-        this.novoPutovanje.grad,
-        this.novoPutovanje.datumOd,
-        this.novoPutovanje.datumDo,
-        this.novoPutovanje.vrstaPrevoza,
-        this.novoPutovanje.cenaPrevoza,
-        this.novoPutovanje.vrstaSmestaja,
-        this.novoPutovanje.cenaSmestaja
-      );
-      this.travelService.editPutovanje(p);
+      await this.firebaseService.updateTravel(this.id, this.novoPutovanje);
     } else {
-      // dodavanje
-      const noviId = Math.random().toString(36).substring(2, 9);
-      const p = new Travel(
-        noviId,
-        this.novoPutovanje.drzava,
-        this.novoPutovanje.grad,
-        this.novoPutovanje.datumOd,
-        this.novoPutovanje.datumDo,
-        this.novoPutovanje.vrstaPrevoza,
-        this.novoPutovanje.cenaPrevoza,
-        this.novoPutovanje.vrstaSmestaja,
-        this.novoPutovanje.cenaSmestaja
-      );
-      this.travelService.addPutovanje(p);
+      await this.firebaseService.addTravel({
+        ...this.novoPutovanje,
+        ownerId: uid,
+        ownerName: userName,
+        poseceno: false,
+        participants: []
+      });
     }
 
     this.router.navigate(['/travel']);

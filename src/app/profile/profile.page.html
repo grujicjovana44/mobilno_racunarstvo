@@ -11,7 +11,7 @@
     <ion-avatar style="width: 100px; height: 100px; margin: 0 auto; border: 3px solid #f4c2c2;">
       <ion-icon name="person-circle" style="font-size: 100px; color: #d7abab;"></ion-icon>
     </ion-avatar>
-    <h2 style="font-weight: bold; margin-top: 10px;">Jovana Grujić</h2>
+    <h2 style="font-weight: bold; margin-top: 10px;">{{ authService.currentUserName }}</h2>
   </div>
 
   <ion-list lines="full">
@@ -19,7 +19,7 @@
       <ion-icon name="mail-outline" slot="start" style="color: #d7abab;"></ion-icon>
       <ion-label>
         <p>Email</p>
-        <h3 style="font-weight: 500;">jovana@gmail.com</h3>
+        <h3 style="font-weight: 500;">{{ authService.currentUser?.email }}</h3>
       </ion-label>
     </ion-item>
 

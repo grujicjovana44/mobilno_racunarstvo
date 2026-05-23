@@ -51,6 +51,10 @@
 
       <ion-row>
         <ion-col>
+          <div *ngIf="errorMessage" style="color: red; text-align: center; margin: 8px 0; font-size: 0.9rem;">
+            {{ errorMessage }}
+          </div>
+
           <ion-button type="submit" [disabled]="!logInForm.valid" color="primary" expand="block" shape="round"
             class="ion-margin-top">
             Prijavi se

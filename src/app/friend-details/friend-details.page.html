@@ -1,13 +1,82 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>friend-details</ion-title>
+<ion-header class="ion-no-border">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/friends"></ion-back-button>
+    </ion-buttons>
+    <ion-title style="font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+      {{ friend?.name || 'Prijatelj' }}
+    </ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">friend-details</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content class="ion-padding">
+
+  <!-- Profil prijatelja -->
+  <div *ngIf="friend" style="text-align: center; margin-bottom: 20px;">
+    <ion-avatar style="width: 80px; height: 80px; margin: 0 auto;">
+      <ion-icon name="person-circle" style="font-size: 80px; color: #d7abab;"></ion-icon>
+    </ion-avatar>
+    <h2 style="font-weight: bold; margin-top: 8px;">{{ friend.name }}</h2>
+    <p style="color: #666; margin: 0;">{{ friend.email }}</p>
+  </div>
+
+  <ion-list-header>
+    <ion-label style="font-weight: bold;">Putovanja ({{ travels.length }})</ion-label>
+  </ion-list-header>
+
+  <div *ngIf="travels.length === 0" class="ion-text-center ion-padding">
+    <p style="color: #888;">Ovaj prijatelj nema putovanja.</p>
+  </div>
+
+  <!-- Lista putovanja sa komentarima -->
+  <ion-list>
+    <ng-container *ngFor="let t of travels">
+
+      <!-- Travel card -->
+      <ion-item button (click)="toggleComments(t.id)">
+        <ion-label>
+          <h2 style="font-weight: bold;">{{ t.grad }}, {{ t.drzava }}</h2>
+          <p>📅 {{ t.datumOd }} - {{ t.datumDo }}</p>
+          <p>🚗 {{ t.vrstaPrevoza }} · 🏨 {{ t.vrstaSmestaja }}</p>
+        </ion-label>
+        <ion-icon
+          [name]="expandedTravelId === t.id ? 'chevron-up-outline' : 'chevron-down-outline'"
+          slot="end"
+          style="color: #d7abab;">
+        </ion-icon>
+      </ion-item>
+
+      <!-- Komentari (prikazuju se kad je putovanje razvijeno) -->
+      <div *ngIf="expandedTravelId === t.id"
+        style="background: #fdf5f5; padding: 12px 16px; border-left: 3px solid #d7abab;">
+
+        <p style="font-size: 0.85rem; font-weight: bold; color: #888; margin: 0 0 8px;">Komentari i preporuke</p>
+
+        <div *ngIf="currentComments.length === 0" style="color: #aaa; font-size: 0.85rem; margin-bottom: 8px;">
+          Nema komentara. Budi prvi!
+        </div>
+
+        <div *ngFor="let c of currentComments"
+          style="margin-bottom: 10px; background: white; border-radius: 8px; padding: 8px 12px;">
+          <p style="margin: 0; font-weight: 600; font-size: 0.85rem; color: #555;">{{ c.authorName }}</p>
+          <p style="margin: 2px 0 0; font-size: 0.9rem;">{{ c.text }}</p>
+        </div>
+
+        <!-- Unos novog komentara -->
+        <div style="display: flex; gap: 8px; margin-top: 8px;">
+          <ion-input
+            [(ngModel)]="newComment"
+            placeholder="Dodaj komentar ili preporuku..."
+            style="flex: 1; background: white; border-radius: 8px; padding: 4px 10px; font-size: 0.9rem;"
+            (keyup.enter)="addComment(t.id)">
+          </ion-input>
+          <ion-button size="small" (click)="addComment(t.id)" color="primary">
+            <ion-icon name="send-outline"></ion-icon>
+          </ion-button>
+        </div>
+      </div>
+
+    </ng-container>
+  </ion-list>
+
 </ion-content>
