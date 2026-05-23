@@ -1,57 +1,118 @@
-<ion-header [translucent]="true">
+<ion-header class="ion-no-border">
   <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
     <ion-title style="font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
       MY PROFILE
     </ion-title>
+    <ion-buttons slot="end">
+      <ion-button *ngIf="!editMode" (click)="startEdit()">
+        <ion-icon name="create-outline" style="color: white;"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="ion-padding">
+
+  <!-- Avatar i pozdrav -->
   <div style="text-align: center; margin-bottom: 20px;">
     <ion-avatar style="width: 100px; height: 100px; margin: 0 auto; border: 3px solid #f4c2c2;">
       <ion-icon name="person-circle" style="font-size: 100px; color: #d7abab;"></ion-icon>
     </ion-avatar>
     <h2 style="font-weight: bold; margin-top: 10px;">{{ authService.currentUserName }}</h2>
+    <p style="color: #888; margin: 0;">Dobrodošla, {{ authService.currentUserName }}! 👋</p>
   </div>
 
-  <ion-list lines="full">
-    <ion-item>
-      <ion-icon name="mail-outline" slot="start" style="color: #d7abab;"></ion-icon>
-      <ion-label>
-        <p>Email</p>
-        <h3 style="font-weight: 500;">{{ authService.currentUser?.email }}</h3>
-      </ion-label>
-    </ion-item>
+  <!-- VIEW MODE -->
+  <ng-container *ngIf="!editMode">
+    <ion-list lines="full">
 
-    <ion-item>
-      <ion-icon name="calendar-outline" slot="start" style="color: #d7abab;"></ion-icon>
-      <ion-label>
-        <p>Datum rođenja</p>
-        <h3 style="font-weight: 500;">04.04.2003.</h3>
-      </ion-label>
-    </ion-item>
+      <ion-item>
+        <ion-icon name="mail-outline" slot="start" style="color: #d7abab;"></ion-icon>
+        <ion-label>
+          <p>Email</p>
+          <h3 style="font-weight: 500;">{{ authService.currentUser?.email }}</h3>
+        </ion-label>
+      </ion-item>
 
-    <ion-item>
-      <ion-icon name="transgender-outline" slot="start" style="color: #d7abab;"></ion-icon>
-      <ion-label>
-        <p>Pol</p>
-        <h3 style="font-weight: 500;">Ženski</h3>
-      </ion-label>
-    </ion-item>
+      <ion-item>
+        <ion-icon name="calendar-outline" slot="start" style="color: #d7abab;"></ion-icon>
+        <ion-label>
+          <p>Datum rođenja</p>
+          <h3 style="font-weight: 500;">
+            {{ datumRodjenja || 'Nije uneto' }}
+          </h3>
+        </ion-label>
+      </ion-item>
 
-    <ion-item>
-      <ion-icon name="location-outline" slot="start" style="color: #d7abab;"></ion-icon>
-      <ion-label>
-        <p>Grad</p>
-        <h3 style="font-weight: 500;">Beograd</h3>
-      </ion-label>
-    </ion-item>
-  </ion-list>
+      <ion-item>
+        <ion-icon name="location-outline" slot="start" style="color: #d7abab;"></ion-icon>
+        <ion-label>
+          <p>Grad</p>
+          <h3 style="font-weight: 500;">
+            {{ grad || 'Nije uneto' }}
+          </h3>
+        </ion-label>
+      </ion-item>
 
-  <div style="margin-top: 30px;">
-    <ion-button expand="block" fill="clear" color="danger" style="margin-top: 10px; font-weight: bold;"
-    (click)="logout()">
-      ODJAVI SE
+    </ion-list>
+
+    <ion-button expand="block" fill="outline" color="primary" style="margin-top: 16px;" (click)="startEdit()">
+      <ion-icon name="create-outline" slot="start"></ion-icon>
+      Izmeni profil
     </ion-button>
-  </div>
+  </ng-container>
+
+  <!-- EDIT MODE -->
+  <ng-container *ngIf="editMode">
+    <ion-list lines="full">
+
+      <ion-item>
+        <ion-icon name="mail-outline" slot="start" style="color: #d7abab;"></ion-icon>
+        <ion-label>
+          <p>Email</p>
+          <h3 style="font-weight: 500;">{{ authService.currentUser?.email }}</h3>
+        </ion-label>
+      </ion-item>
+
+      <ion-item>
+        <ion-icon name="calendar-outline" slot="start" style="color: #d7abab;"></ion-icon>
+        <ion-input
+          label="Datum rođenja"
+          labelPlacement="floating"
+          placeholder="npr. 04.04.2003."
+          [(ngModel)]="editDatumRodjenja">
+        </ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-icon name="location-outline" slot="start" style="color: #d7abab;"></ion-icon>
+        <ion-input
+          label="Grad"
+          labelPlacement="floating"
+          placeholder="npr. Beograd"
+          [(ngModel)]="editGrad">
+        </ion-input>
+      </ion-item>
+
+    </ion-list>
+
+    <div style="display: flex; gap: 10px; margin-top: 20px;">
+      <ion-button expand="block" color="primary" style="flex: 1;" (click)="saveProfile()">
+        <ion-icon name="checkmark-outline" slot="start"></ion-icon>
+        Sačuvaj
+      </ion-button>
+      <ion-button expand="block" fill="outline" color="medium" style="flex: 1;" (click)="cancelEdit()">
+        Otkaži
+      </ion-button>
+    </div>
+  </ng-container>
+
+  <ion-button expand="block" fill="clear" color="danger" style="margin-top: 30px; font-weight: bold;"
+    (click)="logout()">
+    ODJAVI SE
+  </ion-button>
+
 </ion-content>

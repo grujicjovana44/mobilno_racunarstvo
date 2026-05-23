@@ -28,6 +28,10 @@ export class FirebaseService {
     return snapshot.exists() ? { id: snapshot.id, ...snapshot.data() } : null;
   }
 
+  async updateUserProfile(uid: string, data: { datumRodjenja?: string; grad?: string }) {
+    return await updateDoc(doc(this.db, 'users', uid), data);
+  }
+
   async getUserByEmail(email: string) {
     const q = query(collection(this.db, 'users'), where('email', '==', email));
     const snapshot = await getDocs(q);
@@ -159,5 +163,19 @@ export class FirebaseService {
     return onSnapshot(q, (snapshot) => {
       callback(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
     });
+  }
+
+  // ============ ONE-TIME FETCHES (za statistiku) ============
+
+  async getMyTravelsOnce(myUid: string): Promise<any[]> {
+    const q = query(collection(this.db, 'travels'), where('ownerId', '==', myUid));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+  }
+
+  async getSharedTravelsOnce(myUid: string): Promise<any[]> {
+    const q = query(collection(this.db, 'travels'), where('participants', 'array-contains', myUid));
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
   }
 }

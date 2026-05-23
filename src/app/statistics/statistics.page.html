@@ -1,11 +1,81 @@
-<ion-header [translucent]="true">
+<ion-header class="ion-no-border">
   <ion-toolbar color="primary">
-   <ion-title style="font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title style="font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
       STATISTICS
     </ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="ion-padding">
-  <h2>Dobrodošla, Jovana!</h2>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="ion-text-center ion-padding">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <p style="color: #888; margin-top: 12px;">Učitavam statistiku...</p>
+  </div>
+
+  <ng-container *ngIf="!loading && stats">
+
+    <!-- 1. TRAVEL COUNTER -->
+    <div class="stat-card counter-card">
+      <div class="stat-icon">✈️</div>
+      <div class="stat-label">Travel Counter</div>
+      <div class="stat-big">{{ stats.total }}</div>
+      <div class="stat-sub">
+        <span class="badge own">{{ stats.ownCount }} moja</span>
+        <span class="badge shared">{{ stats.sharedCount }} kao gost</span>
+      </div>
+    </div>
+
+    <!-- 2. TOP DESTINATION -->
+    <div class="stat-card destination-card">
+      <div class="stat-icon">🏆</div>
+      <div class="stat-label">Top Destination</div>
+      <ng-container *ngIf="stats.topDestination; else noDestination">
+        <div class="stat-big dest-name">{{ stats.topDestination.name }}</div>
+        <div class="stat-sub">posetila {{ stats.topDestination.count }}x</div>
+      </ng-container>
+      <ng-template #noDestination>
+        <div class="stat-sub">Nema putovanja još.</div>
+      </ng-template>
+    </div>
+
+    <!-- 3. TRAVEL BUDDY RANK -->
+    <div class="stat-card buddy-card">
+      <div class="stat-icon">👯</div>
+      <div class="stat-label">Travel Buddy Rank</div>
+      <div *ngIf="stats.buddies.length === 0" class="stat-sub">
+        Nisi dodala prijatelje na putovanja.
+      </div>
+      <div class="buddy-list">
+        <div *ngFor="let b of stats.buddies; let i = index" class="buddy-row">
+          <span class="buddy-rank">
+            {{ i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '#' + (i + 1) }}
+          </span>
+          <span class="buddy-name">{{ b.name }}</span>
+          <span class="buddy-count">{{ b.count }} put.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. ACTIVITY CHART -->
+    <div class="stat-card chart-card">
+      <div class="stat-icon">📊</div>
+      <div class="stat-label">Activity Chart</div>
+      <p class="chart-subtitle">Putovanja po mesecima</p>
+      <div style="position: relative; height: 200px;">
+        <canvas #activityChart></canvas>
+      </div>
+    </div>
+
+  </ng-container>
+
+  <!-- Nema podataka -->
+  <div *ngIf="!loading && !stats" class="ion-text-center ion-padding">
+    <p style="color: #888;">Nije moguće učitati statistiku.</p>
+  </div>
+
 </ion-content>

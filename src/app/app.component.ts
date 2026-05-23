@@ -11,7 +11,8 @@ import {
   personCircle, informationCircle, barChart, people, checkmarkCircle, closeCircle,
   mailOutline, calendarOutline, transgenderOutline, schoolOutline, locationOutline, add,
   chevronForwardOutline, mapOutline, barChartOutline, peopleOutline, logOutOutline,
-  trashOutline, createOutline, sendOutline, chevronUpOutline, chevronDownOutline
+  trashOutline, createOutline, sendOutline, chevronUpOutline, chevronDownOutline,
+  checkmarkOutline
 } from 'ionicons/icons';
 
 import { AuthService } from './auth/auth';
@@ -51,7 +52,8 @@ export class AppComponent {
       'create-outline': createOutline,
       'send-outline': sendOutline,
       'chevron-up-outline': chevronUpOutline,
-      'chevron-down-outline': chevronDownOutline
+      'chevron-down-outline': chevronDownOutline,
+      'checkmark-outline': checkmarkOutline
     });
 
     this.router.events.pipe(
