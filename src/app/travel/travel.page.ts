@@ -1,8 +1,10 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { Router } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
+
 import { FirebaseService } from '../services/firebase.service';
 import { AuthService } from '../auth/auth';
 import { TravelDoc } from '../models/travel.model';
@@ -14,7 +16,7 @@ import { TravelDoc } from '../models/travel.model';
   standalone: true,
   imports: [IonicModule, CommonModule, FormsModule]
 })
-export class TravelPage implements OnInit, OnDestroy {
+export class TravelPage implements OnInit {
   private firebaseService = inject(FirebaseService);
   private authService = inject(AuthService);
   public router = inject(Router);
@@ -22,36 +24,19 @@ export class TravelPage implements OnInit, OnDestroy {
   mojaputovanja: TravelDoc[] = [];
   prijateljevaPutovanja: TravelDoc[] = [];
 
-  private unsub1: (() => void) | null = null;
-  private unsub2: (() => void) | null = null;
-
   constructor() {}
-
   ngOnInit() {}
 
-  ionViewWillEnter() {
+  async ionViewWillEnter() {
     const uid = this.authService.currentUid;
     if (!uid) return;
 
-    this.unsub1 = this.firebaseService.subscribeToMyTravels(uid, (travels) => {
-      this.mojaputovanja = travels as TravelDoc[];
-    });
-
-    this.unsub2 = this.firebaseService.subscribeToSharedTravels(uid, (travels) => {
-      this.prijateljevaPutovanja = travels as TravelDoc[];
-    });
-  }
-
-  ionViewWillLeave() {
-    this.unsub1?.();
-    this.unsub2?.();
-    this.unsub1 = null;
-    this.unsub2 = null;
-  }
-
-  ngOnDestroy() {
-    this.unsub1?.();
-    this.unsub2?.();
+    this.mojaputovanja = await firstValueFrom(
+      this.firebaseService.loadMyTravels(uid)
+    );
+    this.prijateljevaPutovanja = await firstValueFrom(
+      this.firebaseService.loadSharedTravels(uid)
+    );
   }
 
   idiNaDodavanje() {
@@ -59,7 +44,8 @@ export class TravelPage implements OnInit, OnDestroy {
   }
 
   async onDelete(id: string) {
-    await this.firebaseService.deleteTravel(id);
+    await firstValueFrom(this.firebaseService.deleteTravel(id));
+    this.mojaputovanja = this.mojaputovanja.filter((t) => t.id !== id);
   }
 
   onEdit(p: TravelDoc) {
@@ -78,7 +64,13 @@ export class TravelPage implements OnInit, OnDestroy {
   }
 
   async togglePoseceno(p: TravelDoc) {
-    await this.firebaseService.updateTravel(p.id, { poseceno: !p.poseceno });
+    await firstValueFrom(
+      this.firebaseService.updateTravel(p.id, { poseceno: !p.poseceno })
+    );
+    const idx = this.mojaputovanja.findIndex((t) => t.id === p.id);
+    if (idx !== -1) {
+      this.mojaputovanja[idx] = { ...p, poseceno: !p.poseceno };
+    }
   }
 
   idiNaUcesnike(travelId: string) {

@@ -37,6 +37,10 @@
       </ion-item>
     </ion-list>
 
+    <div *ngIf="noResults && !requestSent" class="ion-text-center ion-padding">
+      <p style="color: #888;">Korisnik sa tim email-om nije pronađen.</p>
+    </div>
+
     <div *ngIf="requestSent" class="ion-text-center ion-padding">
       <p style="color: green;">✓ Zahtev za prijateljstvo je poslat!</p>
     </div>

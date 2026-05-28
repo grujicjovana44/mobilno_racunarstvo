@@ -33,7 +33,7 @@
         <ion-icon name="mail-outline" slot="start" style="color: #d7abab;"></ion-icon>
         <ion-label>
           <p>Email</p>
-          <h3 style="font-weight: 500;">{{ authService.currentUser?.email }}</h3>
+          <h3 style="font-weight: 500;">{{ authService.user?.email }}</h3>
         </ion-label>
       </ion-item>
 
@@ -73,7 +73,7 @@
         <ion-icon name="mail-outline" slot="start" style="color: #d7abab;"></ion-icon>
         <ion-label>
           <p>Email</p>
-          <h3 style="font-weight: 500;">{{ authService.currentUser?.email }}</h3>
+          <h3 style="font-weight: 500;">{{ authService.user?.email }}</h3>
         </ion-label>
       </ion-item>
 
@@ -111,7 +111,7 @@
   </ng-container>
 
   <ion-button expand="block" fill="clear" color="danger" style="margin-top: 30px; font-weight: bold;"
-    (click)="logout()">
+    (click)="logOut()">
     ODJAVI SE
   </ion-button>
 

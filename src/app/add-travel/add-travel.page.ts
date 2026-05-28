@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { Router, ActivatedRoute } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
+
 import { FirebaseService } from '../services/firebase.service';
 import { AuthService } from '../auth/auth';
 
@@ -36,7 +38,7 @@ export class AddTravelPage implements OnInit {
   ngOnInit() {
     this.id = this.route.snapshot.params['id'];
 
-    this.route.queryParams.subscribe(params => {
+    this.route.queryParams.subscribe((params) => {
       if (params['drzava']) {
         this.novoPutovanje = {
           drzava: params['drzava'],
@@ -58,15 +60,19 @@ export class AddTravelPage implements OnInit {
     if (!uid) return;
 
     if (this.router.url.includes('edit') && this.id) {
-      await this.firebaseService.updateTravel(this.id, this.novoPutovanje);
+      await firstValueFrom(
+        this.firebaseService.updateTravel(this.id, this.novoPutovanje)
+      );
     } else {
-      await this.firebaseService.addTravel({
-        ...this.novoPutovanje,
-        ownerId: uid,
-        ownerName: userName,
-        poseceno: false,
-        participants: []
-      });
+      await firstValueFrom(
+        this.firebaseService.addTravel({
+          ...this.novoPutovanje,
+          ownerId: uid,
+          ownerName: userName,
+          poseceno: false,
+          participants: []
+        })
+      );
     }
 
     this.router.navigate(['/travel']);

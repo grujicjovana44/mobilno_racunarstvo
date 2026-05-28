@@ -1,181 +1,243 @@
-import { Injectable } from '@angular/core';
-import {
-  getFirestore, Firestore, collection, addDoc, getDocs, doc,
-  updateDoc, deleteDoc, arrayUnion, arrayRemove, query, where,
-  onSnapshot, getDoc, orderBy, setDoc
-} from 'firebase/firestore';
-import { db } from '../core/firebase';
+import { HttpClient } from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import { forkJoin, map, Observable, of, switchMap } from 'rxjs';
+import { environment } from 'src/environments/environment';
+import { AuthService } from '../auth/auth';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class FirebaseService {
-  private db: Firestore = db;
+  private http = inject(HttpClient);
+  private authService = inject(AuthService);
+
+  private authUrl(path: string, query: string = ''): string {
+    const token = this.authService.getToken();
+    const auth = token ? `auth=${token}` : '';
+    const q = [auth, query].filter(Boolean).join('&');
+    return `${environment.firebaseRDBUrl}${path}.json${q ? '?' + q : ''}`;
+  }
 
   // ============ USER PROFILE ============
 
-  async createUserProfile(uid: string, name: string, email: string) {
-    return await setDoc(doc(this.db, 'users', uid), {
+  getUserProfile(uid: string): Observable<any> {
+    return this.http
+      .get<any>(this.authUrl(`/users/${uid}`))
+      .pipe(map((data) => (data ? { id: uid, ...data } : null)));
+  }
+
+  createUserProfile(uid: string, name: string, email: string): Observable<any> {
+    return this.http.put(this.authUrl(`/users/${uid}`), {
       name,
       email,
+      datumRodjenja: '',
+      grad: '',
       friendIds: [],
       friendRequestIds: []
     });
   }
 
-  async getUserProfile(uid: string) {
-    const snapshot = await getDoc(doc(this.db, 'users', uid));
-    return snapshot.exists() ? { id: snapshot.id, ...snapshot.data() } : null;
+  updateUserProfile(
+    uid: string,
+    data: { datumRodjenja?: string; grad?: string }
+  ): Observable<any> {
+    return this.http.patch(this.authUrl(`/users/${uid}`), data);
   }
 
-  async updateUserProfile(uid: string, data: { datumRodjenja?: string; grad?: string }) {
-    return await updateDoc(doc(this.db, 'users', uid), data);
-  }
-
-  async getUserByEmail(email: string) {
-    const q = query(collection(this.db, 'users'), where('email', '==', email));
-    const snapshot = await getDocs(q);
-    if (snapshot.empty) return null;
-    const d = snapshot.docs[0];
-    return { id: d.id, ...d.data() };
+  getUserByEmail(email: string): Observable<any | null> {
+    return this.http
+      .get<{ [key: string]: any } | null>(this.authUrl('/users'))
+      .pipe(
+        map((data) => {
+          if (!data) return null;
+          const entry = Object.entries(data).find(
+            ([, user]) =>
+              (user as any).email?.toLowerCase() === email.toLowerCase()
+          );
+          if (!entry) return null;
+          return { id: entry[0], ...(entry[1] as any) };
+        })
+      );
   }
 
   // ============ FRIEND REQUESTS ============
 
-  async sendFriendRequest(toUid: string, fromUid: string) {
-    return await updateDoc(doc(this.db, 'users', toUid), {
-      friendRequestIds: arrayUnion(fromUid)
-    });
+  sendFriendRequest(toUid: string, fromUid: string): Observable<any> {
+    return this.getUserProfile(toUid).pipe(
+      switchMap((profile: any) => {
+        if (!profile) return of(null);
+        const requestIds: string[] = profile.friendRequestIds || [];
+        if (requestIds.includes(fromUid)) return of(null);
+        return this.http.patch(this.authUrl(`/users/${toUid}`), {
+          friendRequestIds: [...requestIds, fromUid]
+        });
+      })
+    );
   }
 
-  subscribeToFriendRequests(myUid: string, callback: (requests: any[]) => void) {
-    return onSnapshot(doc(this.db, 'users', myUid), async (snapshot) => {
-      if (!snapshot.exists()) { callback([]); return; }
-      const requestIds: string[] = snapshot.data()['friendRequestIds'] || [];
-      if (requestIds.length === 0) { callback([]); return; }
-      const requests = await Promise.all(
-        requestIds.map(async (uid) => {
-          const s = await getDoc(doc(this.db, 'users', uid));
-          return s.exists() ? { id: uid, ...s.data() } : { id: uid, name: 'Nepoznat', email: '' };
-        })
-      );
-      callback(requests);
-    });
+  loadFriendRequests(myUid: string): Observable<any[]> {
+    return this.getUserProfile(myUid).pipe(
+      switchMap((profile: any) => {
+        const requestIds: string[] = profile?.friendRequestIds || [];
+        if (requestIds.length === 0) return of([]);
+        return forkJoin(requestIds.map((uid) => this.getUserProfile(uid)));
+      }),
+      map((profiles: any[]) => profiles.filter((p) => p !== null))
+    );
   }
 
-  async acceptFriendRequest(myUid: string, fromUid: string) {
-    await updateDoc(doc(this.db, 'users', myUid), {
-      friendIds: arrayUnion(fromUid),
-      friendRequestIds: arrayRemove(fromUid)
-    });
-    await updateDoc(doc(this.db, 'users', fromUid), {
-      friendIds: arrayUnion(myUid)
-    });
+  acceptFriendRequest(myUid: string, fromUid: string): Observable<any> {
+    return this.getUserProfile(myUid).pipe(
+      switchMap((myProfile: any) => {
+        const friendIds = [...(myProfile?.friendIds || [])];
+        const requestIds = (myProfile?.friendRequestIds || []).filter(
+          (id: string) => id !== fromUid
+        );
+        if (!friendIds.includes(fromUid)) friendIds.push(fromUid);
+        return this.http.patch(this.authUrl(`/users/${myUid}`), {
+          friendIds,
+          friendRequestIds: requestIds
+        });
+      }),
+      switchMap(() => this.getUserProfile(fromUid)),
+      switchMap((fromProfile: any) => {
+        const friendIds = [...(fromProfile?.friendIds || [])];
+        if (!friendIds.includes(myUid)) friendIds.push(myUid);
+        return this.http.patch(this.authUrl(`/users/${fromUid}`), { friendIds });
+      })
+    );
   }
 
-  async rejectFriendRequest(myUid: string, fromUid: string) {
-    return await updateDoc(doc(this.db, 'users', myUid), {
-      friendRequestIds: arrayRemove(fromUid)
-    });
+  rejectFriendRequest(myUid: string, fromUid: string): Observable<any> {
+    return this.getUserProfile(myUid).pipe(
+      switchMap((profile: any) => {
+        const requestIds = (profile?.friendRequestIds || []).filter(
+          (id: string) => id !== fromUid
+        );
+        return this.http.patch(this.authUrl(`/users/${myUid}`), {
+          friendRequestIds: requestIds
+        });
+      })
+    );
   }
 
-  subscribeToFriends(myUid: string, callback: (friends: any[]) => void) {
-    return onSnapshot(doc(this.db, 'users', myUid), async (snapshot) => {
-      if (!snapshot.exists()) { callback([]); return; }
-      const friendIds: string[] = snapshot.data()['friendIds'] || [];
-      if (friendIds.length === 0) { callback([]); return; }
-      const friends = await Promise.all(
-        friendIds.map(async (uid) => {
-          const s = await getDoc(doc(this.db, 'users', uid));
-          return s.exists() ? { id: uid, ...s.data() } : { id: uid, name: 'Nepoznat', email: '' };
-        })
-      );
-      callback(friends);
-    });
+  loadFriends(myUid: string): Observable<any[]> {
+    return this.getUserProfile(myUid).pipe(
+      switchMap((profile: any) => {
+        const friendIds: string[] = profile?.friendIds || [];
+        if (friendIds.length === 0) return of([]);
+        return forkJoin(friendIds.map((uid) => this.getUserProfile(uid)));
+      }),
+      map((profiles: any[]) => profiles.filter((p) => p !== null))
+    );
   }
 
   // ============ TRAVELS ============
 
-  async addTravel(travelData: any) {
-    return await addDoc(collection(this.db, 'travels'), travelData);
+  addTravel(data: any): Observable<{ name: string }> {
+    return this.http.post<{ name: string }>(this.authUrl('/travels'), data);
   }
 
-  async updateTravel(travelId: string, data: any) {
-    return await updateDoc(doc(this.db, 'travels', travelId), data);
+  updateTravel(id: string, data: any): Observable<any> {
+    return this.http.patch(this.authUrl(`/travels/${id}`), data);
   }
 
-  async deleteTravel(travelId: string) {
-    return await deleteDoc(doc(this.db, 'travels', travelId));
+  deleteTravel(id: string): Observable<any> {
+    return this.http.delete(this.authUrl(`/travels/${id}`));
   }
 
-  async getTravel(travelId: string) {
-    const snapshot = await getDoc(doc(this.db, 'travels', travelId));
-    return snapshot.exists() ? { id: snapshot.id, ...snapshot.data() } : null;
+  getTravel(id: string): Observable<any> {
+    return this.http
+      .get<any>(this.authUrl(`/travels/${id}`))
+      .pipe(map((data) => (data ? { id, ...data } : null)));
   }
 
-  subscribeToMyTravels(myUid: string, callback: (travels: any[]) => void) {
-    const q = query(collection(this.db, 'travels'), where('ownerId', '==', myUid));
-    return onSnapshot(q, (snapshot) => {
-      callback(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
-    });
+  private loadAllTravels(): Observable<any[]> {
+    return this.http
+      .get<{ [key: string]: any } | null>(this.authUrl('/travels'))
+      .pipe(
+        map((data) => {
+          if (!data) return [];
+          return Object.keys(data).map((key) => ({ id: key, ...data[key] }));
+        })
+      );
   }
 
-  subscribeToSharedTravels(myUid: string, callback: (travels: any[]) => void) {
-    const q = query(collection(this.db, 'travels'), where('participants', 'array-contains', myUid));
-    return onSnapshot(q, (snapshot) => {
-      callback(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
-    });
+  loadMyTravels(uid: string): Observable<any[]> {
+    return this.loadAllTravels().pipe(
+      map((travels) => travels.filter((t) => t.ownerId === uid))
+    );
   }
 
-  subscribeToUserTravels(targetUid: string, callback: (travels: any[]) => void) {
-    const q = query(collection(this.db, 'travels'), where('ownerId', '==', targetUid));
-    return onSnapshot(q, (snapshot) => {
-      callback(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
-    });
+  loadSharedTravels(uid: string): Observable<any[]> {
+    return this.loadAllTravels().pipe(
+      map((travels) =>
+        travels.filter((t) => (t.participants || []).includes(uid))
+      )
+    );
   }
 
-  async addParticipantToTravel(travelId: string, friendUid: string) {
-    return await updateDoc(doc(this.db, 'travels', travelId), {
-      participants: arrayUnion(friendUid)
-    });
+  loadUserTravels(targetUid: string): Observable<any[]> {
+    return this.loadAllTravels().pipe(
+      map((travels) => travels.filter((t) => t.ownerId === targetUid))
+    );
   }
 
-  async removeParticipantFromTravel(travelId: string, friendUid: string) {
-    return await updateDoc(doc(this.db, 'travels', travelId), {
-      participants: arrayRemove(friendUid)
-    });
+  addParticipantToTravel(travelId: string, friendUid: string): Observable<any> {
+    return this.getTravel(travelId).pipe(
+      switchMap((travel: any) => {
+        const participants = [...(travel?.participants || [])];
+        if (!participants.includes(friendUid)) participants.push(friendUid);
+        return this.http.patch(this.authUrl(`/travels/${travelId}`), {
+          participants
+        });
+      })
+    );
+  }
+
+  removeParticipantFromTravel(
+    travelId: string,
+    friendUid: string
+  ): Observable<any> {
+    return this.getTravel(travelId).pipe(
+      switchMap((travel: any) => {
+        const participants = (travel?.participants || []).filter(
+          (uid: string) => uid !== friendUid
+        );
+        return this.http.patch(this.authUrl(`/travels/${travelId}`), {
+          participants
+        });
+      })
+    );
   }
 
   // ============ COMMENTS ============
 
-  async addComment(travelId: string, comment: any) {
-    return await addDoc(collection(this.db, 'travels', travelId, 'comments'), {
+  addComment(travelId: string, comment: any): Observable<any> {
+    return this.http.post(this.authUrl(`/comments/${travelId}`), {
       ...comment,
       timestamp: new Date().getTime()
     });
   }
 
-  subscribeToComments(travelId: string, callback: (comments: any[]) => void) {
-    const q = query(
-      collection(this.db, 'travels', travelId, 'comments'),
-      orderBy('timestamp', 'asc')
-    );
-    return onSnapshot(q, (snapshot) => {
-      callback(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
-    });
+  loadComments(travelId: string): Observable<any[]> {
+    return this.http
+      .get<{ [key: string]: any } | null>(this.authUrl(`/comments/${travelId}`))
+      .pipe(
+        map((data) => {
+          if (!data) return [];
+          return Object.keys(data)
+            .map((key) => ({ id: key, ...data[key] }))
+            .sort((a, b) => a.timestamp - b.timestamp);
+        })
+      );
   }
 
-  // ============ ONE-TIME FETCHES (za statistiku) ============
+  // ============ STATS (one-time fetches) ============
 
-  async getMyTravelsOnce(myUid: string): Promise<any[]> {
-    const q = query(collection(this.db, 'travels'), where('ownerId', '==', myUid));
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+  getMyTravelsOnce(uid: string): Observable<any[]> {
+    return this.loadMyTravels(uid);
   }
 
-  async getSharedTravelsOnce(myUid: string): Promise<any[]> {
-    const q = query(collection(this.db, 'travels'), where('participants', 'array-contains', myUid));
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+  getSharedTravelsOnce(uid: string): Observable<any[]> {
+    return this.loadSharedTravels(uid);
   }
 }

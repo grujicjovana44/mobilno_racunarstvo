@@ -1,15 +1,9 @@
 import { CanActivateFn, Router, UrlTree } from '@angular/router';
 import { inject } from '@angular/core';
-import { onAuthStateChanged } from 'firebase/auth';
-import { firebaseAuth } from '../core/firebase';
+import { AuthService } from '../auth/auth';
 
-export const authGuard: CanActivateFn = (): Promise<boolean | UrlTree> => {
+export const authGuard: CanActivateFn = (): boolean | UrlTree => {
   const router = inject(Router);
-
-  return new Promise<boolean | UrlTree>((resolve) => {
-    const unsubscribe = onAuthStateChanged(firebaseAuth, (user) => {
-      unsubscribe();
-      resolve(user ? true : router.createUrlTree(['/login']));
-    });
-  });
+  const authService = inject(AuthService);
+  return authService.isUserAuthenticated ? true : router.createUrlTree(['/login']);
 };

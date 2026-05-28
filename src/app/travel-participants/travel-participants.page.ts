@@ -1,8 +1,10 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { Router, ActivatedRoute } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
+
 import { FirebaseService } from '../services/firebase.service';
 import { AuthService } from '../auth/auth';
 
@@ -13,7 +15,7 @@ import { AuthService } from '../auth/auth';
   standalone: true,
   imports: [IonicModule, CommonModule, FormsModule]
 })
-export class TravelParticipantsPage implements OnInit, OnDestroy {
+export class TravelParticipantsPage implements OnInit {
   private firebaseService = inject(FirebaseService);
   private authService = inject(AuthService);
   private route = inject(ActivatedRoute);
@@ -23,22 +25,21 @@ export class TravelParticipantsPage implements OnInit, OnDestroy {
   travel: any = null;
   mojiPrijatelji: any[] = [];
 
-  private unsub: (() => void) | null = null;
-
   async ngOnInit() {
     this.travelId = this.route.snapshot.params['id'];
     await this.loadTravel();
 
     const uid = this.authService.currentUid;
     if (!uid) return;
-
-    this.unsub = this.firebaseService.subscribeToFriends(uid, (friends) => {
-      this.mojiPrijatelji = friends;
-    });
+    this.mojiPrijatelji = await firstValueFrom(
+      this.firebaseService.loadFriends(uid)
+    );
   }
 
   async loadTravel() {
-    this.travel = await this.firebaseService.getTravel(this.travelId);
+    this.travel = await firstValueFrom(
+      this.firebaseService.getTravel(this.travelId)
+    );
   }
 
   isParticipant(friendId: string): boolean {
@@ -47,18 +48,18 @@ export class TravelParticipantsPage implements OnInit, OnDestroy {
 
   async toggleParticipant(friend: any) {
     if (this.isParticipant(friend.id)) {
-      await this.firebaseService.removeParticipantFromTravel(this.travelId, friend.id);
+      await firstValueFrom(
+        this.firebaseService.removeParticipantFromTravel(this.travelId, friend.id)
+      );
     } else {
-      await this.firebaseService.addParticipantToTravel(this.travelId, friend.id);
+      await firstValueFrom(
+        this.firebaseService.addParticipantToTravel(this.travelId, friend.id)
+      );
     }
     await this.loadTravel();
   }
 
   nazad() {
     this.router.navigate(['/travel']);
-  }
-
-  ngOnDestroy() {
-    this.unsub?.();
   }
 }

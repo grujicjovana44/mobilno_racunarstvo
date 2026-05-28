@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
 import { FirebaseService } from './firebase.service';
 
 export interface StatsData {
@@ -19,18 +20,16 @@ export class StatsService {
 
   async getMyStats(myUid: string): Promise<StatsData> {
     const [ownTravels, sharedTravels] = await Promise.all([
-      this.firebaseService.getMyTravelsOnce(myUid),
-      this.firebaseService.getSharedTravelsOnce(myUid)
+      firstValueFrom(this.firebaseService.getMyTravelsOnce(myUid)),
+      firstValueFrom(this.firebaseService.getSharedTravelsOnce(myUid))
     ]);
 
     const allTravels = [...ownTravels, ...sharedTravels];
 
-    // 1. Travel Counter
     const total = allTravels.length;
     const ownCount = ownTravels.length;
     const sharedCount = sharedTravels.length;
 
-    // 2. Top Destination (grad + drzava, iz svih putovanja)
     const destMap = new Map<string, number>();
     for (const t of allTravels) {
       const dest = `${t.grad}, ${t.drzava}`;
@@ -43,7 +42,6 @@ export class StatsService {
       }
     });
 
-    // 3. Travel Buddy Rank (iz mojih putovanja, ko se najčešće pojavljuje u participants)
     const buddyMap = new Map<string, number>();
     for (const t of ownTravels) {
       const participants: string[] = t.participants || [];
@@ -58,12 +56,13 @@ export class StatsService {
 
     const buddies = await Promise.all(
       topBuddyUids.map(async ([uid, count]) => {
-        const profile = await this.firebaseService.getUserProfile(uid) as any;
+        const profile = (await firstValueFrom(
+          this.firebaseService.getUserProfile(uid)
+        )) as any;
         return { name: profile?.name || 'Nepoznat', count };
       })
     );
 
-    // 4. Activity Chart - putovanja po mesecima (iz datumOd formata DD.MM.YYYY)
     const monthMap = new Map<string, number>();
     for (const t of allTravels) {
       const monthKey = this.parseMonthKey(t.datumOd);
@@ -72,10 +71,9 @@ export class StatsService {
       }
     }
 
-    // Sortiraj po hronološkom redosledu
-    const sortedMonths = [...monthMap.entries()].sort((a, b) => {
-      return this.monthKeyToSortable(a[0]) - this.monthKeyToSortable(b[0]);
-    });
+    const sortedMonths = [...monthMap.entries()].sort(
+      (a, b) => this.monthKeyToSortable(a[0]) - this.monthKeyToSortable(b[0])
+    );
 
     const monthlyLabels = sortedMonths.map(([key]) => this.formatMonthLabel(key));
     const monthlyValues = sortedMonths.map(([, count]) => count);
@@ -83,7 +81,6 @@ export class StatsService {
     return { total, ownCount, sharedCount, topDestination, buddies, monthlyLabels, monthlyValues };
   }
 
-  // "01.07.2026" -> "07.2026"
   private parseMonthKey(dateStr: string): string | null {
     if (!dateStr) return null;
     const parts = dateStr.split('.');
@@ -94,13 +91,11 @@ export class StatsService {
     return `${month}.${year}`;
   }
 
-  // "07.2026" -> 202607 (za sortiranje)
   private monthKeyToSortable(key: string): number {
     const [mm, yyyy] = key.split('.');
     return parseInt(yyyy) * 100 + parseInt(mm);
   }
 
-  // "07.2026" -> "Jul 2026"
   private formatMonthLabel(key: string): string {
     const [mm, yyyy] = key.split('.');
     const names = ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Avg', 'Sep', 'Okt', 'Nov', 'Dec'];

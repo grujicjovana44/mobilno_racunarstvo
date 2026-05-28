@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule, ToastController } from '@ionic/angular';
+import { firstValueFrom } from 'rxjs';
+
 import { AuthService } from '../auth/auth';
 import { FirebaseService } from '../services/firebase.service';
 
@@ -15,11 +17,9 @@ import { FirebaseService } from '../services/firebase.service';
 export class ProfilePage implements OnInit {
   editMode = false;
 
-  // Podaci učitani iz Firestore-a
   datumRodjenja = '';
   grad = '';
 
-  // Privremene vrednosti dok je edit mode aktivan
   editDatumRodjenja = '';
   editGrad = '';
 
@@ -38,7 +38,9 @@ export class ProfilePage implements OnInit {
   private async loadProfile() {
     const uid = this.authService.currentUid;
     if (!uid) return;
-    const profile = await this.firebaseService.getUserProfile(uid) as any;
+    const profile = (await firstValueFrom(
+      this.firebaseService.getUserProfile(uid)
+    )) as any;
     this.datumRodjenja = profile?.datumRodjenja || '';
     this.grad = profile?.grad || '';
   }
@@ -57,10 +59,12 @@ export class ProfilePage implements OnInit {
     const uid = this.authService.currentUid;
     if (!uid) return;
 
-    await this.firebaseService.updateUserProfile(uid, {
-      datumRodjenja: this.editDatumRodjenja.trim(),
-      grad: this.editGrad.trim()
-    });
+    await firstValueFrom(
+      this.firebaseService.updateUserProfile(uid, {
+        datumRodjenja: this.editDatumRodjenja.trim(),
+        grad: this.editGrad.trim()
+      })
+    );
 
     this.datumRodjenja = this.editDatumRodjenja.trim();
     this.grad = this.editGrad.trim();
@@ -75,7 +79,7 @@ export class ProfilePage implements OnInit {
     await toast.present();
   }
 
-  async logout() {
-    await this.authService.logOut();
+  logOut() {
+    this.authService.logOut();
   }
 }

@@ -1,69 +1,123 @@
-import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import {
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged,
-  updateProfile
-} from 'firebase/auth';
-import { BehaviorSubject } from 'rxjs';
-import { firebaseAuth } from '../core/firebase';
-import { FirebaseService } from '../services/firebase.service';
+import { tap } from 'rxjs';
+import { environment } from 'src/environments/environment';
+import { User } from '../models/user.model';
 
-@Injectable({
-  providedIn: 'root'
-})
+export interface AuthResponseData {
+  idToken: string;
+  email: string;
+  refreshToken: string;
+  localId: string;
+  expiresIn: string;
+  registered?: boolean;
+}
+
+@Injectable({ providedIn: 'root' })
 export class AuthService {
-  private currentUserSubject = new BehaviorSubject<{ uid: string; name: string; email: string } | null>(null);
-  public currentUser$ = this.currentUserSubject.asObservable();
+  user: User | null = null;
+  private _currentUserName = '';
 
-  constructor(private router: Router, private firebaseService: FirebaseService) {
-    onAuthStateChanged(firebaseAuth, async (user) => {
-      if (user) {
-        const profile = await this.firebaseService.getUserProfile(user.uid) as any;
-        this.currentUserSubject.next({
-          uid: user.uid,
-          name: profile?.name || user.displayName || '',
-          email: user.email || ''
-        });
-      } else {
-        this.currentUserSubject.next(null);
-      }
-    });
-  }
+  private http = inject(HttpClient);
+  private router = inject(Router);
 
-  get currentUser() {
-    return this.currentUserSubject.getValue();
+  get isUserAuthenticated(): boolean {
+    return this.user !== null && this.user.token !== null;
   }
 
   get currentUid(): string | null {
-    return this.currentUserSubject.getValue()?.uid || null;
+    return this.user?.id ?? null;
   }
 
   get currentUserName(): string {
-    return this.currentUserSubject.getValue()?.name || '';
+    return this._currentUserName;
   }
 
-  get isUserAuthenticated(): boolean {
-    return this.currentUserSubject.getValue() !== null;
+  setCurrentUserName(name: string) {
+    this._currentUserName = name;
+    const raw = localStorage.getItem('userData');
+    if (raw) {
+      const data = JSON.parse(raw);
+      data.name = name;
+      localStorage.setItem('userData', JSON.stringify(data));
+    }
   }
 
-  async logIn(email: string, password: string) {
-    await signInWithEmailAndPassword(firebaseAuth, email, password);
-    this.router.navigate(['/travel']);
+  getToken(): string | null {
+    return this.user?.token ?? null;
   }
 
-  async register(name: string, surname: string, email: string, password: string) {
-    const cred = await createUserWithEmailAndPassword(firebaseAuth, email, password);
-    const fullName = `${name} ${surname}`.trim();
-    await updateProfile(cred.user, { displayName: fullName });
-    await this.firebaseService.createUserProfile(cred.user.uid, fullName, email);
+  getUserId(): string | null {
+    return this.user?.id ?? null;
   }
 
-  async logOut() {
-    await signOut(firebaseAuth);
-    this.currentUserSubject.next(null);
+  private handleAuthentication(userData: AuthResponseData) {
+    const expiration = new Date(
+      new Date().getTime() + +userData.expiresIn * 1000
+    );
+    this.user = new User(
+      userData.localId,
+      userData.email,
+      userData.idToken,
+      expiration
+    );
+    localStorage.setItem(
+      'userData',
+      JSON.stringify({
+        id: userData.localId,
+        email: userData.email,
+        token: userData.idToken,
+        expiration: expiration.toISOString(),
+        name: this._currentUserName
+      })
+    );
+  }
+
+  autoLogin() {
+    const raw = localStorage.getItem('userData');
+    if (!raw) return;
+    const data: {
+      id: string;
+      email: string;
+      token: string;
+      expiration: string;
+      name: string;
+    } = JSON.parse(raw);
+    const loadedUser = new User(
+      data.id,
+      data.email,
+      data.token,
+      new Date(data.expiration)
+    );
+    if (loadedUser.token) {
+      this.user = loadedUser;
+      this._currentUserName = data.name || '';
+    }
+  }
+
+  register(email: string, password: string) {
+    return this.http
+      .post<AuthResponseData>(
+        `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${environment.firebaseAPIKey}`,
+        { email, password, returnSecureToken: true }
+      )
+      .pipe(tap((userData) => this.handleAuthentication(userData)));
+  }
+
+  logIn(email: string, password: string) {
+    return this.http
+      .post<AuthResponseData>(
+        `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${environment.firebaseAPIKey}`,
+        { email, password, returnSecureToken: true }
+      )
+      .pipe(tap((userData) => this.handleAuthentication(userData)));
+  }
+
+  logOut() {
+    this.user = null;
+    this._currentUserName = '';
+    localStorage.removeItem('userData');
     this.router.navigate(['/login']);
   }
 }

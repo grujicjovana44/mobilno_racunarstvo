@@ -1,8 +1,10 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { ActivatedRoute } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
+
 import { FirebaseService } from '../services/firebase.service';
 import { AuthService } from '../auth/auth';
 
@@ -13,7 +15,7 @@ import { AuthService } from '../auth/auth';
   standalone: true,
   imports: [IonicModule, CommonModule, FormsModule]
 })
-export class FriendDetailsPage implements OnInit, OnDestroy {
+export class FriendDetailsPage implements OnInit {
   private firebaseService = inject(FirebaseService);
   private authService = inject(AuthService);
   private route = inject(ActivatedRoute);
@@ -24,46 +26,41 @@ export class FriendDetailsPage implements OnInit, OnDestroy {
   currentComments: any[] = [];
   newComment = '';
 
-  private unsub1: (() => void) | null = null;
-  private unsub2: (() => void) | null = null;
-
   async ngOnInit() {
     const friendId = this.route.snapshot.params['id'];
-    this.friend = await this.firebaseService.getUserProfile(friendId);
-
-    this.unsub1 = this.firebaseService.subscribeToUserTravels(friendId, (travels) => {
-      this.travels = travels;
-    });
+    this.friend = await firstValueFrom(
+      this.firebaseService.getUserProfile(friendId)
+    );
+    this.travels = await firstValueFrom(
+      this.firebaseService.loadUserTravels(friendId)
+    );
   }
 
-  toggleComments(travelId: string) {
+  async toggleComments(travelId: string) {
     if (this.expandedTravelId === travelId) {
       this.expandedTravelId = null;
       this.currentComments = [];
-      this.unsub2?.();
-      this.unsub2 = null;
     } else {
-      this.unsub2?.();
       this.expandedTravelId = travelId;
       this.currentComments = [];
-      this.unsub2 = this.firebaseService.subscribeToComments(travelId, (comments) => {
-        this.currentComments = comments;
-      });
+      this.currentComments = await firstValueFrom(
+        this.firebaseService.loadComments(travelId)
+      );
     }
   }
 
   async addComment(travelId: string) {
     if (!this.newComment.trim()) return;
-    await this.firebaseService.addComment(travelId, {
-      authorId: this.authService.currentUid,
-      authorName: this.authService.currentUserName,
-      text: this.newComment.trim()
-    });
+    await firstValueFrom(
+      this.firebaseService.addComment(travelId, {
+        authorId: this.authService.currentUid,
+        authorName: this.authService.currentUserName,
+        text: this.newComment.trim()
+      })
+    );
     this.newComment = '';
-  }
-
-  ngOnDestroy() {
-    this.unsub1?.();
-    this.unsub2?.();
+    this.currentComments = await firstValueFrom(
+      this.firebaseService.loadComments(travelId)
+    );
   }
 }

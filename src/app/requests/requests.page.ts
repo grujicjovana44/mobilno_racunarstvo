@@ -1,6 +1,8 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { firstValueFrom } from 'rxjs';
+
 import {
   IonContent, IonHeader, IonTitle, IonToolbar,
   IonList, IonItem, IonAvatar, IonIcon,
@@ -22,35 +24,39 @@ import { AuthService } from '../auth/auth';
     CommonModule, FormsModule
   ]
 })
-export class RequestsPage implements OnInit, OnDestroy {
+export class RequestsPage implements OnInit {
   private firebaseService = inject(FirebaseService);
   private authService = inject(AuthService);
 
   zahtevi: any[] = [];
 
-  private unsub: (() => void) | null = null;
+  async ngOnInit() {
+    await this.loadRequests();
+  }
 
-  ngOnInit() {
+  async loadRequests() {
     const uid = this.authService.currentUid;
     if (!uid) return;
-    this.unsub = this.firebaseService.subscribeToFriendRequests(uid, (requests) => {
-      this.zahtevi = requests;
-    });
+    this.zahtevi = await firstValueFrom(
+      this.firebaseService.loadFriendRequests(uid)
+    );
   }
 
   async prihvatiZahtev(osoba: any) {
     const myUid = this.authService.currentUid;
     if (!myUid) return;
-    await this.firebaseService.acceptFriendRequest(myUid, osoba.id);
+    await firstValueFrom(
+      this.firebaseService.acceptFriendRequest(myUid, osoba.id)
+    );
+    await this.loadRequests();
   }
 
   async odbijZahtev(osoba: any) {
     const myUid = this.authService.currentUid;
     if (!myUid) return;
-    await this.firebaseService.rejectFriendRequest(myUid, osoba.id);
-  }
-
-  ngOnDestroy() {
-    this.unsub?.();
+    await firstValueFrom(
+      this.firebaseService.rejectFriendRequest(myUid, osoba.id)
+    );
+    await this.loadRequests();
   }
 }

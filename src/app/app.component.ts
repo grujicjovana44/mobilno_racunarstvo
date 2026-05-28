@@ -29,6 +29,7 @@ export class AppComponent {
   showTabs = true;
 
   constructor(private router: Router, public authService: AuthService) {
+    authService.autoLogin();
     addIcons({
       'person-circle': personCircle,
       'person-circle-outline': personCircle,
@@ -64,7 +65,7 @@ export class AppComponent {
     });
   }
 
-  async logOut() {
-    await this.authService.logOut();
+  logOut() {
+    this.authService.logOut();
   }
 }
